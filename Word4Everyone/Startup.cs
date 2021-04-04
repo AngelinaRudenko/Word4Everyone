@@ -2,9 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
+using Word4Everyone.Data;
 
 namespace Word4Everyone
 {
@@ -20,6 +23,29 @@ namespace Word4Everyone
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //Enable CORS
+            services.AddCors(c =>
+            {
+                c.AddPolicy("MyPolocy", options => options.AllowAnyOrigin().AllowAnyMethod()
+                .AllowAnyHeader());
+            }
+            );
+
+            //Dependency injection for dbContext
+            services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            //Swagger
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1",
+                    new OpenApiInfo
+                    {
+                        Title = "Swagger API",
+                        Description = "Word4Everyone API",
+                        Version = "v1"
+                    });
+            });
 
             services.AddControllersWithViews();
 
@@ -49,6 +75,16 @@ namespace Word4Everyone
             app.UseSpaStaticFiles();
 
             app.UseRouting();
+
+            //Enable CORS
+            app.UseCors("MyPolocy");
+
+            //Swagger
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Swagger API");
+            });
 
             app.UseEndpoints(endpoints =>
             {
