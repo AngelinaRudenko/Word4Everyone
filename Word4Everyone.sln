@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31019.35
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Word4Everyone", "Word4Everyone\Word4Everyone.csproj", "{9F618D1F-41B0-45E1-B15F-EA2F21718C8C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F618D1F-41B0-45E1-B15F-EA2F21718C8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F618D1F-41B0-45E1-B15F-EA2F21718C8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F618D1F-41B0-45E1-B15F-EA2F21718C8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F618D1F-41B0-45E1-B15F-EA2F21718C8C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {93F151C8-DF86-4EC8-A207-E89761E50D41}
+	EndGlobalSection
+EndGlobal
