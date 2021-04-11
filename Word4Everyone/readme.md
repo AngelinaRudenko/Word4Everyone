@@ -1,5 +1,6 @@
 ﻿### Agenda
 
-[x] Registration
-[x] Authorization
+ - [x] Registration
+ - [x] Authorization
+ - [ ] Email Confirmation
 
