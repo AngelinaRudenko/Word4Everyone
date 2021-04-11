@@ -1,1 +1,0 @@
-﻿Shares the classes between API and client

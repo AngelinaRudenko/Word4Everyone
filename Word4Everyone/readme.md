@@ -1,4 +1,5 @@
 ﻿### Agenda
 
-[X] Registration
+[x] Registration
+[x] Authorization
 
