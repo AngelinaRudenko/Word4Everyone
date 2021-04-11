@@ -1,8 +1,4 @@
-﻿### Weekly Tasks List
+﻿### Agenda
 
-- [ ] User entity 
-    - [ ] Get (whole list)
-	- [ ] Get (one user)
-	- [ ] Post
-	- [ ] Put
-	- [ ] Delete
+[X] Registration
+
