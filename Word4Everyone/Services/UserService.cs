@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Word4Everyone.Model;
 using Word4Everyone.Services.Interfaces;
-using Word4Everyone.Shared;
 
 namespace Word4Everyone.Services
 {
@@ -18,24 +17,24 @@ namespace Word4Everyone.Services
     {
         private UserManager<IdentityUser> _userManager;
         private IConfiguration _configuration;
-        private IMailService _mailService;
+        //private IMailService _mailService;
 
         public UserService(UserManager<IdentityUser> userManager, IConfiguration configuration, IMailService mailService)
         {
             _userManager = userManager;
             _configuration = configuration;
-            _mailService = mailService;
+            //_mailService = mailService;
         }
 
         public async Task<UserManagerResponse> RegisterUserAsync(RegisterViewModel model)
         {
             if (model == null)
-                throw new NullReferenceException("Register model is null");
+                throw new NullReferenceException("Пустая модель регистрации");
 
             if (model.Password != model.PasswordConfirm)
                 return new UserManagerResponse
                 {
-                    Message = "Confirm password doesn't match the password",
+                    Message = "Подтверждение пароля не соответствует паролю",
                     IsSuccess = false
                 };
 
@@ -49,23 +48,23 @@ namespace Word4Everyone.Services
 
             if (result.Succeeded)
             {
-                var confirmEmailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var encodedEmailToken = Encoding.UTF8.GetBytes(confirmEmailToken);
-                var validEmailToken = WebEncoders.Base64UrlEncode(encodedEmailToken);
-                string url = $"{_configuration["ThisAppUrl"]}/api/Auth/ConfirmEmail?userid={user.Id}&token={validEmailToken}";
-                await _mailService.SendEmailAsync(user.Email, "Confirm your Email", "<h1>Welcome to Word4Everyone</h1>"+
-                    $"<p>Please confirm your email by <a href='{url}'>Clicking here</a></p>");
+                //var confirmEmailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                //var encodedEmailToken = Encoding.UTF8.GetBytes(confirmEmailToken);
+                //var validEmailToken = WebEncoders.Base64UrlEncode(encodedEmailToken);
+                //string url = $"{_configuration["ThisAppUrl"]}/api/Auth/ConfirmEmail?userid={user.Id}&token={validEmailToken}";
+                //await _mailService.SendEmailAsync(user.Email, "Confirm your Email", "<h1>Welcome to Word4Everyone</h1>"+
+                //    $"<p>Please confirm your email by <a href='{url}'>Clicking here</a></p>");
 
                 return new UserManagerResponse
                 {
-                    Message = "User created successfully",
+                    Message = "Пользователь успешно зарегистрирован",
                     IsSuccess = true
                 };
             }
 
             return new UserManagerResponse
             {
-                Message = "User didn't create",
+                Message = "Пользователь не был зарегистрирован",
                 IsSuccess = false,
                 Errors = result.Errors.Select(e => e.Description)
             };
@@ -78,7 +77,7 @@ namespace Word4Everyone.Services
             if (user == null)
                 return new UserManagerResponse
                 {
-                    Message = "Invalid Email",
+                    Message = "Неверный Email",
                     IsSuccess = false
                 };
 
@@ -87,7 +86,7 @@ namespace Word4Everyone.Services
             if (!result)
                 return new UserManagerResponse
                 {
-                    Message = "Invalid password",
+                    Message = "Неверный пароль",
                     IsSuccess = false
                 };
 
@@ -117,34 +116,34 @@ namespace Word4Everyone.Services
             };
         }
 
-        public async Task<UserManagerResponse> ConfirmEmailAsync(string userId, string token)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-                return new UserManagerResponse
-                {
-                    Message = "User not found",
-                    IsSuccess = false
-                };
+        //public async Task<UserManagerResponse> ConfirmEmailAsync(string userId, string token)
+        //{
+        //    var user = await _userManager.FindByIdAsync(userId);
+        //    if (user == null)
+        //        return new UserManagerResponse
+        //        {
+        //            Message = "User not found",
+        //            IsSuccess = false
+        //        };
 
-            var decodedToken = WebEncoders.Base64UrlDecode(token);
-            string normalToken = Encoding.UTF8.GetString(decodedToken);
+        //    var decodedToken = WebEncoders.Base64UrlDecode(token);
+        //    string normalToken = Encoding.UTF8.GetString(decodedToken);
 
-            var result = await _userManager.ConfirmEmailAsync(user, normalToken);
+        //    var result = await _userManager.ConfirmEmailAsync(user, normalToken);
 
-            if (result.Succeeded)
-                return new UserManagerResponse
-                {
-                    Message = "Email confirmed successfully",
-                    IsSuccess = true
-                };
+        //    if (result.Succeeded)
+        //        return new UserManagerResponse
+        //        {
+        //            Message = "Email confirmed successfully",
+        //            IsSuccess = true
+        //        };
 
-            return new UserManagerResponse
-            {
-                Message = "Email did not confirm",
-                IsSuccess = false,
-                Errors = result.Errors.Select(e => e.Description)
-            };
-        }
+        //    return new UserManagerResponse
+        //    {
+        //        Message = "Email did not confirm",
+        //        IsSuccess = false,
+        //        Errors = result.Errors.Select(e => e.Description)
+        //    };
+        //}
     }
 }

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Word4Everyone.Shared;
+﻿using System.Threading.Tasks;
+using Word4Everyone.Model;
 
 namespace Word4Everyone.Services.Interfaces
 {
@@ -10,6 +7,6 @@ namespace Word4Everyone.Services.Interfaces
     {
         Task<UserManagerResponse> RegisterUserAsync(RegisterViewModel model);
         Task<UserManagerResponse> LoginUserAsync(LoginViewModel model);
-        Task<UserManagerResponse> ConfirmEmailAsync(string userId, string token);
+        //Task<UserManagerResponse> ConfirmEmailAsync(string userId, string token);
     }
 }

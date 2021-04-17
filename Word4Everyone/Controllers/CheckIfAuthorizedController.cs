@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Word4Everyone.Controllers
 {
@@ -14,11 +9,18 @@ namespace Word4Everyone.Controllers
     [Authorize]
     public class CheckIfAuthorizedController : ControllerBase
     {
+        //[Authorize] - to allow authorized users
+        //You can also put this attribute before the class difinition
+        //[AllowAnonymus] - to allow access for not authorized users
+        //This attribute always overrides [Authorized]
+        //For example if class is [AllowAnonymus], but method is [Authorized], 
+        //user will have access to method without authorization
+
         [HttpGet]
         public IActionResult Get()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier);
-            return Ok($"You are authorized!\nYours id {userId}");
+            return Ok($"Вы авторизованы!\nВаш id {userId}");
         }
     }
 }
