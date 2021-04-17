@@ -95,7 +95,7 @@ namespace Word4Everyone.Controllers
                 return BadRequest("Неверный запрос");
 
             string userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            if (document == null || !document.UserId.Equals(userId)) 
+            if (!document.UserId.Equals(userId)) 
                 return NotFound("Документа не существует");
 
             _context.Documents.Remove(document);
