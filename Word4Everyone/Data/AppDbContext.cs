@@ -1,20 +1,22 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Word4Everyone.Model;
 
 namespace Word4Everyone.Data
 {
     public class AppDbContext : IdentityDbContext//<User, IdentityRole<int>, int>
     {
-        //Tools -> NuGet Packacge Manager -> Package Manager Console
+        //Tools -> NuGet Package Manager -> Package Manager Console
         //Add-Migration "label"
         //Update-Database
 
+        //public DbSet<User> Users { get; set; }
+        public DbSet<Document> Documents { get; set; }
+
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            //Database.EnsureDeleted();   //delete Db with an old schema
-            //Database.EnsureCreated();   //create Db with a new Schema
+            //Database.EnsureDeleted();   // удаляем бд со старой схемой
+            //Database.EnsureCreated();   // Cоздаем БД при первом обращении
         }
-
-        //public DbSet<User> Users { get; set; }
     }
 }

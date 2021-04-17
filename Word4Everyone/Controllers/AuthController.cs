@@ -9,7 +9,7 @@ namespace Word4Everyone.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private IUserService _userService;
+        private readonly IUserService _userService;
         //private IMailService _mailService;
 
         public AuthController(IUserService userService, IMailService mailService)

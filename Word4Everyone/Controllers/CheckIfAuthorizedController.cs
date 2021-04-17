@@ -9,13 +9,6 @@ namespace Word4Everyone.Controllers
     [Authorize]
     public class CheckIfAuthorizedController : ControllerBase
     {
-        //[Authorize] - to allow authorized users
-        //You can also put this attribute before the class difinition
-        //[AllowAnonymus] - to allow access for not authorized users
-        //This attribute always overrides [Authorized]
-        //For example if class is [AllowAnonymus], but method is [Authorized], 
-        //user will have access to method without authorization
-
         [HttpGet]
         public IActionResult Get()
         {

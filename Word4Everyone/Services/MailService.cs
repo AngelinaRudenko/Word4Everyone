@@ -8,7 +8,7 @@ namespace Word4Everyone.Services
 {
     public class MailService : IMailService
     {
-        private IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
 
         public MailService(IConfiguration configuration)
         {

@@ -15,8 +15,8 @@ namespace Word4Everyone.Services
 {
     public class UserService : IUserService
     {
-        private UserManager<IdentityUser> _userManager;
-        private IConfiguration _configuration;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IConfiguration _configuration;
         //private IMailService _mailService;
 
         public UserService(UserManager<IdentityUser> userManager, IConfiguration configuration, IMailService mailService)
