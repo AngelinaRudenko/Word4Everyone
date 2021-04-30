@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Word4Everyone.Data;
 using Word4Everyone.Model;
+using Word4Everyone.Services.Interfaces;
 
 namespace Word4Everyone.Controllers
 {
@@ -16,10 +17,12 @@ namespace Word4Everyone.Controllers
     public class DocumentsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IMessagesService _serviceMessages;
 
-        public DocumentsController(AppDbContext context)
+        public DocumentsController(AppDbContext context, IMessagesService serviceMessages)
         {
-            _context = context;
+            _context = context; 
+            _serviceMessages = serviceMessages;
         }
 
         // GET: api/Documents
@@ -39,7 +42,7 @@ namespace Word4Everyone.Controllers
             string userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
 
             if (document == null || !document.UserId.Equals(userId)) 
-                return NotFound("Документа не существует");
+                return NotFound(_serviceMessages.NoDocumentFound);
 
             return document;
         }
@@ -50,11 +53,11 @@ namespace Word4Everyone.Controllers
         public async Task<IActionResult> PutDocument(int id, Document document)
         {
             if (document.UserId == null)
-                return BadRequest("Неверный запрос");
+                return BadRequest(_serviceMessages.BadRequest);
 
             string userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (id != document.Id || !DocumentExists(id) || !document.UserId.Equals(userId)) 
-                return BadRequest("Документа не существует");
+                return BadRequest(_serviceMessages.NoDocumentFound);
 
             document.ChangeDateModified();
             _context.Entry(document).State = EntityState.Modified;
@@ -65,10 +68,10 @@ namespace Word4Everyone.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                return BadRequest("Возникла ошибка. Попробуйте еще раз");
+                return BadRequest(_serviceMessages.BadRequest);
             }
 
-            return Ok("Изменения сохранены");
+            return Ok(_serviceMessages.Saved);
         }
 
         // POST: api/Documents
@@ -82,7 +85,7 @@ namespace Word4Everyone.Controllers
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
 
-            return Ok("Сохранено");
+            return Ok(_serviceMessages.Saved);
         }
 
         // DELETE: api/Documents/5
@@ -92,16 +95,16 @@ namespace Word4Everyone.Controllers
             var document = await _context.Documents.FindAsync(id);
 
             if (document.UserId == null)
-                return BadRequest("Неверный запрос");
+                return BadRequest(_serviceMessages.BadRequest);
 
             string userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             if (!document.UserId.Equals(userId)) 
-                return NotFound("Документа не существует");
+                return NotFound(_serviceMessages.NoDocumentFound);
 
             _context.Documents.Remove(document);
             await _context.SaveChangesAsync();
 
-            return Ok("Удалено");
+            return Ok(_serviceMessages.Deleted);
         }
 
         private bool DocumentExists(int id)

@@ -13,7 +13,7 @@ namespace Word4Everyone.Model
         [StringLength(50, MinimumLength = 8)]
         public string Password { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Повторите пароль")]
         [Compare("Password", ErrorMessage = "Пароли не совпадают")]
         [DataType(DataType.Password)]
         [StringLength(50, MinimumLength = 8)]

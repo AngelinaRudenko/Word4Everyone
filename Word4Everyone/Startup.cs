@@ -88,6 +88,7 @@ namespace Word4Everyone
 
             services.AddScoped<IUserService, UserService>();
             services.AddTransient<IMailService, MailService>();
+            services.AddScoped<IMessagesService, MessagesService>();
 
             //Swagger
             services.AddSwaggerGen(options =>
