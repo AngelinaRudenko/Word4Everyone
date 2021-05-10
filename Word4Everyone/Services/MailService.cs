@@ -17,12 +17,12 @@ namespace Word4Everyone.Services
 
         public async Task SendEmailAsync(string toEmail, string subject, string content)
         {
-            var apiKey = _configuration["SendGridApiKey"];
-            var client = new SendGridClient(apiKey);
-            var from = new EmailAddress("support@word4everyone.com", "Word4Everyone support");
-            var to = new EmailAddress(toEmail);
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, content, content);
-            var response = await client.SendEmailAsync(msg).ConfigureAwait(false);
+            string apiKey = _configuration["SendGrid:apiKey"];
+            SendGridClient client = new SendGridClient(apiKey);
+            EmailAddress from = new EmailAddress(_configuration["SendGrid:senderMail"], _configuration["SendGrid:senderName"]);
+            EmailAddress to = new EmailAddress(toEmail);
+            SendGridMessage msg = MailHelper.CreateSingleEmail(from, to, subject, content, content);
+            await client.SendEmailAsync(msg).ConfigureAwait(false);
         }
     }
 }

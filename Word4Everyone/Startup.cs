@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Word4Everyone.Data;
+using Word4Everyone.Model;
 using Word4Everyone.Services;
 using Word4Everyone.Services.Interfaces;
 
@@ -28,6 +29,8 @@ namespace Word4Everyone
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
+
             //Enable CORS
             services.AddCors(c =>
             {
@@ -42,10 +45,16 @@ namespace Word4Everyone
             //Identity
             services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
                 options.Password.RequiredLength = 8;
-            }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+                options.User.RequireUniqueEmail = true;
+            })
+                .AddErrorDescriber<AppIdentityErrorDescriber>()
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddDefaultTokenProviders();
 
             //https://metanit.com/sharp/aspnet5/23.7.php
             //Авторизация с помощью JWT-токенов
@@ -61,13 +70,9 @@ namespace Word4Everyone
                 //использовать передачу данных по протоколу https.
 
                 //TokenValidationParameters: параметры валидации токена - сложный объект, определяющий, 
-                //    как токен будет валидироваться. Этот объект в свою очередь имеет множество свойств, 
-                //    которые позволяют настроить различные аспекты валидации токена. Но наиболее важные 
+                //    как токен будет валидироваться. Наиболее важные 
                 //    свойства: IssuerSigningKey - ключ безопасности, которым подписывается токен, и 
-                //    ValidateIssuerSigningKey -надо ли валидировать ключ безопасности. Ну и кроме того, 
-                //    можно установить ряд других свойств, таких как нужно ли валидировать издателя и 
-                //    потребителя токена, срок жизни токена, можно установить название claims для ролей 
-                //    и логинов пользователя и т.д.
+                //    ValidateIssuerSigningKey -надо ли валидировать ключ безопасности.
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                 {
                     // укзывает, будет ли валидироваться издатель при валидации токена
@@ -88,7 +93,6 @@ namespace Word4Everyone
 
             services.AddScoped<IUserService, UserService>();
             services.AddTransient<IMailService, MailService>();
-            services.AddScoped<IMessagesService, MessagesService>();
 
             //Swagger
             services.AddSwaggerGen(options =>

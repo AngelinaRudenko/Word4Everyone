@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Localization;
 using Word4Everyone.Model;
 using Word4Everyone.Services.Interfaces;
 
@@ -10,68 +12,92 @@ namespace Word4Everyone.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
-        //private IMailService _mailService;
+        private readonly IMailService _mailService;
+        private readonly IStringLocalizer<SharedResource> _sharedLocalizer;
 
-        public AuthController(IUserService userService, IMailService mailService)
+        public AuthController(IUserService userService, IMailService mailService,
+            IStringLocalizer<SharedResource> sharedLocalizer)
         {
             _userService = userService;
-            //_mailService = mailService;
+            _mailService = mailService;
+            _sharedLocalizer = sharedLocalizer;
         }
 
         // POST: api/Auth/Register
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterAsync([FromBody] RegisterViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                var result = await _userService.RegisterUserAsync(model);
+            // TODO: Do I really need this, if model checks itself automatically
+            // if (!ModelState.IsValid) 
+            //    return BadRequest(_sharedLocalizer["WrongRegisterModel"].Value);
 
-                if (result.IsSuccess)
-                    return Ok(result); //Status code: 200
+            UserManagerResponse result = await _userService.RegisterUserAsync(model);
 
-                return BadRequest(result);
-            }
-
-            // Ошибка на клиенте
-            return BadRequest("Введены неверные данные"); // Status code: 400 
+            if (result.IsSuccess)
+                return Ok(result);
+            
+            return BadRequest(result);
         }
 
         // POST: api/Auth/Login
         [HttpPost("Login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                var result = await _userService.LoginUserAsync(model);
+            // TODO
+            // if (!ModelState.IsValid) 
+            //    return BadRequest(_sharedLocalizer["WrongLoginModel"].Value);
 
-                if (result.IsSuccess)
-                {
-                    //await _mailService.SendEmailAsync(model.Email, "New Login", $"<h1>Hey! New login to your account noticed at {DateTime.Now}</h1>");
-                    return Ok(result); //Status code: 200
-                }
+            UserManagerResponse result = await _userService.LoginUserAsync(model);
 
+            if (!result.IsSuccess)
                 return Unauthorized(result);
-            }
 
-            return Unauthorized("Введены неверные данные"); // Status code: 400 
+            return Ok(result);
         }
 
         // GET: api/Auth/ConfirmEmail
-        //[HttpGet("ConfirmEmail")]
-        //public async Task<IActionResult> ConfirmEmail(string userId, string token)
-        //{
-        //    if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
-        //        return NotFound();
+        [HttpGet("ConfirmEmail")]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
+                return NotFound();
 
-        //    var result = await _userService.ConfirmEmailAsync(userId, token);
+            UserManagerResponse result = await _userService.ConfirmEmailAsync(userId, token);
 
-        //    if (result.IsSuccess)
-        //    {
-        //        return Ok();
-        //        //return Redirect($"{_configuration["thisAppUrl"]}/ConfirmEmail.html")
-        //    };
+            if (result.IsSuccess)
+                return Ok(_sharedLocalizer["EmailConfirmed"].Value);
+            
+            return BadRequest(result);
+        }
 
-        //    return BadRequest(result);
-        //}
+        // GET: api/Auth/ForgetPassword
+        [HttpGet("ForgetPassword")]
+        public async Task<IActionResult> ForgetPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return NotFound(_sharedLocalizer["NoEmail"].Value);
+
+            UserManagerResponse result = await _userService.ForgetPasswordAsync(email);
+            if (result.IsSuccess)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
+        // POST: api/Auth/ResetPassword
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model) //FromForm
+        {
+            //TODO
+            // if (!ModelState.IsValid) return BadRequest();
+
+            UserManagerResponse result = await _userService.ResetPasswordAsync(model);
+
+            if (result.IsSuccess)
+                return Ok(result);
+
+            return BadRequest(result);
+
+        }
     }
 }

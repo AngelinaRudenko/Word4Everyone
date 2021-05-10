@@ -9,13 +9,12 @@ namespace Word4Everyone.Model
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Введите название документа")]
-        [StringLength(100, MinimumLength = 1, 
-            ErrorMessage = "Название должно содержать от 1 до 100 знаков")]
+        [Required(ErrorMessage = "Не указано название документа.")]
+        [StringLength(100, MinimumLength = 1, ErrorMessage = "Название документа должно содержать от {2} до {1} символов.")]
         [Column(TypeName = "nvarchar(100)")]
         public string Name { get; set; }
 
-        [Required(ErrorMessage = "Введите текст")]
+        [Required(ErrorMessage = "Документ должен содержать текст.")]
         [DataType(DataType.MultilineText)]
         public string Text { get; set; }
 

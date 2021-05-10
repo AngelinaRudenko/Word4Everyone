@@ -1,13 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Localization;
 using Word4Everyone.Model;
 using Word4Everyone.Services.Interfaces;
 
@@ -17,26 +20,27 @@ namespace Word4Everyone.Services
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _configuration;
-        //private IMailService _mailService;
+        private readonly IMailService _mailService;
+        private readonly IStringLocalizer<SharedResource> _sharedLocalizer;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
-        public UserService(UserManager<IdentityUser> userManager, IConfiguration configuration, IMailService mailService)
+        public UserService(UserManager<IdentityUser> userManager,
+            IConfiguration configuration, IMailService mailService,
+            IStringLocalizer<SharedResource> sharedLocalizer,
+            IWebHostEnvironment hostEnvironment)
         {
             _userManager = userManager;
             _configuration = configuration;
-            //_mailService = mailService;
+            _mailService = mailService;
+            _sharedLocalizer = sharedLocalizer;
+            _hostEnvironment = hostEnvironment;
         }
 
         public async Task<UserManagerResponse> RegisterUserAsync(RegisterViewModel model)
         {
-            if (model == null)
-                throw new NullReferenceException("Пустая модель регистрации");
-
-            if (model.Password != model.PasswordConfirm)
-                return new UserManagerResponse
-                {
-                    Message = "Подтверждение пароля не соответствует паролю",
-                    IsSuccess = false
-                };
+            // TODO
+            // if (model == null)
+            //    throw new NullReferenceException(_sharedLocalizer["EmptyRegisterModel"].Value);
 
             IdentityUser user = new IdentityUser
             {
@@ -44,62 +48,70 @@ namespace Word4Everyone.Services
                 UserName = model.Email
             };
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            IdentityResult result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                //var confirmEmailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                //var encodedEmailToken = Encoding.UTF8.GetBytes(confirmEmailToken);
-                //var validEmailToken = WebEncoders.Base64UrlEncode(encodedEmailToken);
-                //string url = $"{_configuration["ThisAppUrl"]}/api/Auth/ConfirmEmail?userid={user.Id}&token={validEmailToken}";
-                //await _mailService.SendEmailAsync(user.Email, "Confirm your Email", "<h1>Welcome to Word4Everyone</h1>"+
-                //    $"<p>Please confirm your email by <a href='{url}'>Clicking here</a></p>");
+                string confirmEmailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                byte[] encodedEmailToken = Encoding.UTF8.GetBytes(confirmEmailToken);
+                string validEmailToken = WebEncoders.Base64UrlEncode(encodedEmailToken);
+                string url = $"{_configuration["ThisAppUrl"]}/api/Auth/ConfirmEmail?userid={user.Id}&token={validEmailToken}";
+
+                string path = Path.Combine(_hostEnvironment.WebRootPath, "MailTemplates", "ConfirmEmail.html");
+                string text = File.ReadAllText(path);
+                text = text.Replace("{link}", url);
+
+                await _mailService.SendEmailAsync(user.Email, 
+                    _sharedLocalizer["EmailConfirmationName"].Value, text);
 
                 return new UserManagerResponse
                 {
-                    Message = "Пользователь успешно зарегистрирован",
-                    IsSuccess = true
+                    IsSuccess = true,
+                    Message = _sharedLocalizer["RegistrationSuccess"].Value
                 };
             }
 
             return new UserManagerResponse
             {
-                Message = "Пользователь не был зарегистрирован",
                 IsSuccess = false,
+                Message = _sharedLocalizer["RegistrationFail"].Value,
                 Errors = result.Errors.Select(e => e.Description)
             };
         }
 
         public async Task<UserManagerResponse> LoginUserAsync(LoginViewModel model)
         {
+            //TODO
+            // if (model == null)
+            //    throw new NullReferenceException(_sharedLocalizer["EmptyLoginModel"].Value);
+
             IdentityUser user = await _userManager.FindByNameAsync(model.Email);
 
             if (user == null)
                 return new UserManagerResponse
                 {
-                    Message = "Неверный Email",
-                    IsSuccess = false
+                    IsSuccess = false,
+                    Message = _sharedLocalizer["WrongEmail"].Value
                 };
 
-            var result = await _userManager.CheckPasswordAsync(user, model.Password);
+            bool result = await _userManager.CheckPasswordAsync(user, model.Password);
 
             if (!result)
                 return new UserManagerResponse
                 {
-                    Message = "Неверный пароль",
-                    IsSuccess = false
+                    IsSuccess = false,
+                    Message = _sharedLocalizer["WrongPassword"].Value
                 };
 
-            var claims = new[]
+            Claim[] claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim("Email", model.Email)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"]));
+            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"]));
 
-
-            var token = new JwtSecurityToken(
+            JwtSecurityToken token = new JwtSecurityToken(
                 issuer: _configuration["AuthSettings:Issuer"],
                 audience: _configuration["AuthSettings:Audience"],
                 claims: claims,
@@ -110,40 +122,102 @@ namespace Word4Everyone.Services
 
             return new UserManagerResponse
             {
-                Message = tokenAsString,
                 IsSuccess = true,
+                Message = tokenAsString,
                 ExpireDate = token.ValidTo
             };
         }
 
-        //public async Task<UserManagerResponse> ConfirmEmailAsync(string userId, string token)
-        //{
-        //    var user = await _userManager.FindByIdAsync(userId);
-        //    if (user == null)
-        //        return new UserManagerResponse
-        //        {
-        //            Message = "User not found",
-        //            IsSuccess = false
-        //        };
+        public async Task<UserManagerResponse> ConfirmEmailAsync(string userId, string token)
+        {
+            IdentityUser user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return new UserManagerResponse
+                {
+                    IsSuccess = false,
+                    Message = _sharedLocalizer["UserNotFound"].Value
+                };
 
-        //    var decodedToken = WebEncoders.Base64UrlDecode(token);
-        //    string normalToken = Encoding.UTF8.GetString(decodedToken);
+            byte[] decodedToken = WebEncoders.Base64UrlDecode(token);
+            string normalToken = Encoding.UTF8.GetString(decodedToken);
+            IdentityResult result = await _userManager.ConfirmEmailAsync(user, normalToken);
 
-        //    var result = await _userManager.ConfirmEmailAsync(user, normalToken);
+            if (result.Succeeded)
+                return new UserManagerResponse
+                {
+                    IsSuccess = true,
+                    Message = _sharedLocalizer["EmailConfirmed"].Value
+                };
 
-        //    if (result.Succeeded)
-        //        return new UserManagerResponse
-        //        {
-        //            Message = "Email confirmed successfully",
-        //            IsSuccess = true
-        //        };
+            return new UserManagerResponse
+            {
+                IsSuccess = false,
+                Message = _sharedLocalizer["EmailNotConfirmed"].Value,
+                Errors = result.Errors.Select(e => e.Description)
+            };
+        }
 
-        //    return new UserManagerResponse
-        //    {
-        //        Message = "Email did not confirm",
-        //        IsSuccess = false,
-        //        Errors = result.Errors.Select(e => e.Description)
-        //    };
-        //}
+        public async Task<UserManagerResponse> ForgetPasswordAsync(string email)
+        {
+            IdentityUser user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                return new UserManagerResponse
+                {
+                    IsSuccess = false,
+                    Message = _sharedLocalizer["UserNotFound"].Value
+                };
+
+            string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            byte[] encodedToken = Encoding.UTF8.GetBytes(token);
+            string validToken = WebEncoders.Base64UrlEncode(encodedToken);
+
+            string url = $"{_configuration["ThisAppUrl"]}/api/Auth/ResetPassword?email={email}&token={validToken}";
+
+            string path = Path.Combine(_hostEnvironment.WebRootPath, "MailTemplates", "ConfirmEmail.html");
+            string text = File.ReadAllText(path);
+            text = text.Replace("{link}", url);
+
+            await _mailService.SendEmailAsync(user.Email,
+                _sharedLocalizer["ResetPasswordEmailName"].Value, text);
+
+            return new UserManagerResponse
+            {
+                IsSuccess = true,
+                Message = _sharedLocalizer["ResetUrlSent"].Value
+            };
+        }
+
+        public async Task<UserManagerResponse> ResetPasswordAsync(ResetPasswordViewModel model)
+        {
+            // TODO
+            // if (model == null)
+            //    throw new NullReferenceException(_sharedLocalizer["EmptyResetModel"].Value);
+
+            IdentityUser user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return new UserManagerResponse
+                {
+                    IsSuccess = false,
+                    Message = _sharedLocalizer["UserNotFound"].Value
+                };
+
+            byte[] decodedToken = WebEncoders.Base64UrlDecode(model.Token);
+            string normalToken = Encoding.UTF8.GetString(decodedToken);
+            IdentityResult result = await _userManager.ResetPasswordAsync(user, normalToken, model.Password);
+
+            if (result.Succeeded)
+                return new UserManagerResponse
+                {
+                    IsSuccess = true,
+                    Message = _sharedLocalizer["PasswordChanged"].Value
+                };
+
+            return new UserManagerResponse
+            {
+                IsSuccess = false,
+                Message = _sharedLocalizer["PasswordNotChanged"].Value,
+                Errors = result.Errors.Select(x => x.Description)
+            };
+        }
     }
 }
